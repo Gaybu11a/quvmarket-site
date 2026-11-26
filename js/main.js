@@ -32,14 +32,27 @@
     cards.forEach(c => (c.hidden = f !== "all" && c.dataset.cat !== f));
   }));
 
-  $("#sort").addEventListener("change", e => {
-    const mode = e.target.value;
+  const pop = () => cards.forEach((c, i) => {
+    if (c.hidden) return;
+    c.classList.add("is-in");
+    c.classList.remove("is-pop");
+    void c.offsetWidth;
+    c.style.animationDelay = `${Math.min(i, 8) * 45}ms`;
+    c.classList.add("is-pop");
+  });
+  $$(".tab").forEach(t => t.addEventListener("click", pop));
+
+  $$(".chip").forEach(chip => chip.addEventListener("click", () => {
+    $$(".chip").forEach(c => c.classList.remove("is-active"));
+    chip.classList.add("is-active");
+    const mode = chip.dataset.sort;
     const key = c => mode === "default" ? +c.dataset.order : +c.dataset.price;
     const dir = mode === "desc" ? -1 : 1;
     // narxi yo'q mahsulotlar saralashda oxirida turadi
     const priced = c => mode === "default" || !!c.dataset.price;
     [...cards].sort((a, b) => (priced(b) - priced(a)) || (key(a) - key(b)) * dir).forEach(c => grid.appendChild(c));
-  });
+    pop();
+  }));
 
   // ---------- helpers ----------
   const fmt = n => n ? Number(n).toLocaleString("ru-RU").replace(/ /g, " ") + " so'm" : "narxini so'rang";
@@ -150,13 +163,51 @@
   });
 
   // ---------- reveal on scroll ----------
-  const targets = $$(".section__head, .feature, .choose__card, .steps li, .faq details, .ccard, .form");
+  const targets = $$(".section__head, .feature, .choose__card, .steps li, .faq details, .ccard, .form, .card, .cat-tile, .trust__item, .cta__inner");
+  targets.forEach((t, i) => { if (t.matches(".card, .feature, .cat-tile, .trust__item")) t.style.transitionDelay = `${(i % 4) * 70}ms`; });
   if ("IntersectionObserver" in window) {
     targets.forEach(t => t.classList.add("reveal"));
     const io = new IntersectionObserver(entries => entries.forEach(en => {
       if (en.isIntersecting) { en.target.classList.add("is-in"); io.unobserve(en.target); }
     }), { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
     targets.forEach(t => io.observe(t));
+  }
+
+
+  // ---------- scroll progress ----------
+  const bar = $("#progress");
+  const onProgress = () => {
+    const h = document.documentElement;
+    const max = h.scrollHeight - h.clientHeight;
+    bar.style.transform = `scaleX(${max > 0 ? Math.min(h.scrollTop / max, 1) : 0})`;
+  };
+  window.addEventListener("scroll", onProgress, { passive: true });
+  onProgress();
+
+  // ---------- count-up numbers ----------
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (!reduce) {
+    $$("[data-countup]").forEach(el => {
+      const end = +el.dataset.countup;
+      const t0 = performance.now() + 500;
+      const step = now => {
+        const p = Math.min(Math.max((now - t0) / 1400, 0), 1);
+        el.textContent = Math.round(end * (1 - Math.pow(1 - p, 3)));
+        if (p < 1) requestAnimationFrame(step);
+      };
+      el.textContent = "0";
+      requestAnimationFrame(step);
+    });
+  }
+
+  // ---------- hero parallax ----------
+  const media = $(".hero__media");
+  if (media && !reduce && window.matchMedia("(hover: hover)").matches) {
+    window.addEventListener("mousemove", e => {
+      const x = (e.clientX / innerWidth - .5) * 14;
+      const y = (e.clientY / innerHeight - .5) * 10;
+      media.style.translate = `${x}px ${y}px`;
+    }, { passive: true });
   }
 
   $("#year").textContent = new Date().getFullYear();

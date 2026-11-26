@@ -62,6 +62,7 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+  <div class="progress" id="progress" aria-hidden="true"></div>
 
   <!-- ===== TOP BAR ===== -->
   <div class="topbar">
@@ -108,9 +109,9 @@
           <a href="https://t.me/quv_market" target="_blank" rel="noopener" class="btn btn--ghost">Telegram'da yozish</a>
         </div>
         <ul class="hero__facts">
-          <li><b>150 ming</b><span>so'mdan boshlab</span></li>
-          <li><b>200 kg</b><span>gacha ko'taradi</span></li>
-          <li><b>1 kun</b><span>Toshkent bo'ylab yetkazish</span></li>
+          <li><b><em data-countup="150">150</em> ming</b><span>so'mdan boshlab</span></li>
+          <li><b><em data-countup="200">200</em> kg</b><span>gacha ko'taradi</span></li>
+          <li><b><em data-countup="1">1</em> kun</b><span>Toshkent bo'ylab yetkazish</span></li>
         </ul>
       </div>
       <div class="hero__media">
@@ -121,6 +122,14 @@
       </div>
     </div>
   </section>
+
+  <!-- ===== MARQUEE ===== -->
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee__track">
+      <span>Yetkazib berish</span><span>O'rnatib berish</span><span>Kafolat</span><span>Online va offline</span><span>Yugurish yo'laklari</span><span>Velotrenajorlar</span><span>Stepperlar</span><span>Elliptik trenajorlar</span>
+      <span>Yetkazib berish</span><span>O'rnatib berish</span><span>Kafolat</span><span>Online va offline</span><span>Yugurish yo'laklari</span><span>Velotrenajorlar</span><span>Stepperlar</span><span>Elliptik trenajorlar</span>
+    </div>
+  </div>
 
   <!-- ===== TRUST STRIP ===== -->
   <section class="trust" aria-label="Afzalliklar">
@@ -182,14 +191,14 @@
           <button class="tab" data-filter="elliptical" role="tab" aria-selected="false">Elliptik</button>
           <button class="tab" data-filter="ab" role="tab" aria-selected="false">Pres uchun</button>
         </div>
-        <label class="sort">
+        <div class="sort" role="group" aria-label="Saralash">
           <span>Saralash:</span>
-          <select id="sort">
-            <option value="default">Tavsiya etilgan</option>
-            <option value="asc">Arzonroq avval</option>
-            <option value="desc">Qimmatroq avval</option>
-          </select>
-        </label>
+          <div class="chips">
+            <button type="button" class="chip is-active" data-sort="default">Tavsiya</button>
+            <button type="button" class="chip" data-sort="asc">Arzonroq ↑</button>
+            <button type="button" class="chip" data-sort="desc">Qimmatroq ↓</button>
+          </div>
+        </div>
       </div>
 
       <div class="grid" id="products">
