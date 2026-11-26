@@ -18,7 +18,7 @@ Yangi rasmni `img/products/` ga qo'yib, `index.html` dagi mahsulot kartasidagi `
 `index.html` dagi har bir `<article class="card" ... data-price="6800000">` — bitta mahsulot.
 Narxni o'zgartirsangiz, `data-price` va ko'rinadigan narxni ikkalasini ham yangilang.
 Narx hali ma'lum bo'lmasa `data-price` ni olib tashlang va narx o'rniga "Narxini so'rang" yozing.
-Bir nechta rangli mahsulot uchun RUNEX-YT kartasidagi `swatches` blokiga qarang.
+Bir nechta rangli mahsulot uchun VELO-2PRO kartasidagi `swatches` blokiga qarang.
 Yangi mahsulot uchun bitta `<article>` blokini nusxalab, matnini o'zgartiring
 (`data-cat="treadmill"` — yugurish yo'lagi, `data-cat="bike"` — velotrenajor).
 
