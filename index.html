@@ -525,9 +525,10 @@
 
         <form class="form" id="orderForm" novalidate>
           <h3>Tezkor ariza</h3>
-          <p class="form__hint">Ma'lumotlarni to'ldiring — xabar tayyorlanadi va Telegram ochiladi.</p>
+          <p class="form__hint">Ma'lumotlarni to'ldiring — tayyor xabar bilan Telegram ochiladi, siz faqat "Yuborish" tugmasini bosasiz.</p>
           <label>Ismingiz<input name="name" required placeholder="Masalan: Aziz"></label>
           <label>Telefon raqamingiz<input name="phone" type="tel" required placeholder="+998 __ ___ __ __"></label>
+          <label>Manzil<input name="address" required autocomplete="street-address" placeholder="Viloyat, tuman, ko'cha / qishloq"></label>
           <label>Qaysi trenajyor?
             <select name="product" id="productSelect"><option value="">Maslahat kerak</option></select>
           </label>
@@ -583,12 +584,14 @@
       <p class="eyebrow">Buyurtma</p>
       <h3 id="modalTitle">Mahsulot</h3>
       <p class="modal__price" id="modalPrice"></p>
-      <p class="modal__hint">Qulay usulni tanlang. Telegram tugmasini bossangiz, buyurtma matni nusxalanadi — chatga joylashtiring (Paste).</p>
-      <div class="modal__actions">
-        <a class="btn btn--full" href="tel:+998931689474">📞 Qo'ng'iroq qilish</a>
-        <a class="btn btn--full btn--tg" id="modalTg" href="https://t.me/quv_market" target="_blank" rel="noopener">Telegram'da yozish</a>
-        <a class="btn btn--full btn--ig" href="https://ig.me/m/quvmarkets" target="_blank" rel="noopener">Instagram'da yozish</a>
-      </div>
+      <form class="form form--modal" id="modalForm" novalidate>
+        <label>Ismingiz<input name="name" required autocomplete="name" placeholder="Masalan: Aziz"></label>
+        <label>Telefon raqamingiz<input name="phone" type="tel" required autocomplete="tel" placeholder="+998 __ ___ __ __"></label>
+        <label>Manzil<input name="address" required autocomplete="street-address" placeholder="Viloyat, tuman, ko'cha / qishloq"></label>
+        <button class="btn btn--full btn--tg" type="submit">Telegram orqali yuborish</button>
+        <p class="form__msg" id="modalMsg" role="status" aria-live="polite"></p>
+        <p class="modal__alt">Yoki qo'ng'iroq qiling: <a href="tel:+998931689474">+998 93 168 94 74</a></p>
+      </form>
     </div>
   </div>
 

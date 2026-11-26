@@ -423,3 +423,9 @@ a.ccard:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
 .hero__facts { gap: clamp(18px, 2.4vw, 32px); }
 .hero__facts li { white-space: nowrap; }
 @media (max-width: 520px) { .hero__facts li { white-space: normal; } }
+
+/* order modal form */
+.form--modal { border: 0; padding: 0; background: none; gap: 12px; margin-top: 4px; }
+.modal__alt { font-size: 14px; color: var(--muted); text-align: center; }
+.modal__alt a { color: var(--accent); font-weight: 800; }
+.modal__box { max-height: 92vh; overflow-y: auto; }
