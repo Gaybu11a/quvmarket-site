@@ -32,14 +32,27 @@
     cards.forEach(c => (c.hidden = f !== "all" && c.dataset.cat !== f));
   }));
 
-  $("#sort").addEventListener("change", e => {
-    const mode = e.target.value;
+  const pop = () => cards.forEach((c, i) => {
+    if (c.hidden) return;
+    c.classList.add("is-in");
+    c.classList.remove("is-pop");
+    void c.offsetWidth;
+    c.style.animationDelay = `${Math.min(i, 8) * 45}ms`;
+    c.classList.add("is-pop");
+  });
+  $$(".tab").forEach(t => t.addEventListener("click", pop));
+
+  $$(".chip").forEach(chip => chip.addEventListener("click", () => {
+    $$(".chip").forEach(c => c.classList.remove("is-active"));
+    chip.classList.add("is-active");
+    const mode = chip.dataset.sort;
     const key = c => mode === "default" ? +c.dataset.order : +c.dataset.price;
     const dir = mode === "desc" ? -1 : 1;
     // narxi yo'q mahsulotlar saralashda oxirida turadi
     const priced = c => mode === "default" || !!c.dataset.price;
     [...cards].sort((a, b) => (priced(b) - priced(a)) || (key(a) - key(b)) * dir).forEach(c => grid.appendChild(c));
-  });
+    pop();
+  }));
 
   // ---------- helpers ----------
   const fmt = n => n ? Number(n).toLocaleString("ru-RU").replace(/ /g, " ") + " so'm" : "narxini so'rang";
@@ -99,64 +112,132 @@
   cards.forEach(c => {
     const name = $("h3", c).textContent.trim();
     const opt = new Option(`${name} — ${fmt(c.dataset.price)}`, name);
+    opt.dataset.price = c.dataset.price || "";
     select.add(opt);
   });
 
+  // ---------- order message (Telegram) ----------
+  const dots = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  const today = () => {
+    const d = new Date();
+    return [d.getDate(), d.getMonth() + 1].map(x => String(x).padStart(2, "0")).join(".") + "." + d.getFullYear();
+  };
+  const buildMessage = ({ name, phone, address, product, price, note }) =>
+    `📅 ${today()}\n👤 ${name}\n📞 ${phone}\n📍 ${address}\n🛒 ${product}\n💰 ${price ? dots(price) : "narxini so'rang"}` +
+    (note ? `\n📝 ${note}` : "");
+  const validPhone = v => v.replace(/\D/g, "").length >= 9;
+
+  // Telegram chatni tayyor matn bilan ochadi; foydalanuvchi faqat "Yuborish"ni bosadi
+  const sendToTelegram = text => {
+    const url = `${TG}?text=${encodeURIComponent(text)}`;
+    window.open(url, "_blank", "noopener");
+    return copy(text);
+  };
+
+  const wireOrderForm = (formEl, msgEl, getOrder) => {
+    const f = n => formEl.elements.namedItem(n);
+    formEl.addEventListener("submit", e => {
+      e.preventDefault();
+      const name = f("name").value.trim();
+      const phone = f("phone").value.trim();
+      const address = f("address").value.trim();
+      f("name").classList.toggle("is-invalid", !name);
+      f("phone").classList.toggle("is-invalid", !validPhone(phone));
+      f("address").classList.toggle("is-invalid", !address);
+      if (!name || !validPhone(phone) || !address) {
+        msgEl.textContent = "Iltimos, ism, telefon raqami va manzilni to'ldiring.";
+        msgEl.classList.add("is-error");
+        return;
+      }
+      const order = getOrder();
+      const text = buildMessage({ name, phone, address, ...order });
+      msgEl.classList.remove("is-error");
+      msgEl.textContent = "Telegram ochilmoqda — xabar tayyor, faqat \"Yuborish\" tugmasini bosing. (Xabar nusxalandi ham.)";
+      sendToTelegram(text);
+    });
+  };
+
   // ---------- order modal ----------
   const modal = $("#modal");
+  const modalForm = $("#modalForm");
+  const modalMsg = $("#modalMsg");
   let lastFocus = null;
-  let orderText = "";
+  let current = { product: "", price: "" };
   const openModal = card => {
-    const name = $("h3", card).textContent.trim();
-    const price = fmt(card.dataset.price);
-    $("#modalTitle").textContent = name;
-    $("#modalPrice").textContent = price;
-    orderText = `Assalomu alaykum! Saytingizdan yozyapman.\nMen "${name}" (${price}) ga buyurtma bermoqchiman. Mavjudmi?`;
+    current = { product: $("h3", card).textContent.trim(), price: card.dataset.price || "" };
+    $("#modalTitle").textContent = current.product;
+    $("#modalPrice").textContent = fmt(current.price);
+    modalMsg.textContent = "";
+    modalMsg.classList.remove("is-error");
     lastFocus = document.activeElement;
     modal.hidden = false;
-    $("#modalClose").focus();
+    $("input[name=name]", modalForm).focus();
   };
   const closeModal = () => { modal.hidden = true; lastFocus && lastFocus.focus(); };
   $$(".order").forEach(btn => btn.addEventListener("click", () => openModal(btn.closest(".card"))));
   $("#modalClose").addEventListener("click", closeModal);
   modal.addEventListener("click", e => { if (e.target === modal) closeModal(); });
   document.addEventListener("keydown", e => { if (e.key === "Escape" && !modal.hidden) closeModal(); });
-  $("#modalTg").addEventListener("click", () => { copy(orderText); });
+  wireOrderForm(modalForm, modalMsg, () => ({ product: current.product, price: current.price }));
 
-  // ---------- quick form -> Telegram ----------
+  // ---------- quick form (contact section) ----------
   const form = $("#orderForm");
-  const field = n => form.elements.namedItem(n);
-  const msg = $("#formMsg");
-  form.addEventListener("submit", async e => {
-    e.preventDefault();
-    const name = field("name").value.trim();
-    const phone = field("phone").value.trim();
-    field("name").classList.toggle("is-invalid", !name);
-    field("phone").classList.toggle("is-invalid", phone.replace(/\D/g, "").length < 9);
-    if (!name || phone.replace(/\D/g, "").length < 9) {
-      msg.textContent = "Iltimos, ism va telefon raqamini to'g'ri kiriting.";
-      msg.classList.add("is-error");
-      return;
-    }
-    const product = field("product").value || "Maslahat kerak";
-    const note = field("note").value.trim();
-    const text = `Assalomu alaykum! Saytdan ariza.\nIsm: ${name}\nTelefon: ${phone}\nTrenajyor: ${product}` + (note ? `\nIzoh: ${note}` : "");
-    const ok = await copy(text);
-    msg.classList.remove("is-error");
-    msg.textContent = ok
-      ? "Xabar nusxalandi! Telegram ochilmoqda — chatga joylashtiring (Paste) va yuboring."
-      : "Telegram ochilmoqda — ma'lumotlaringizni yozib yuboring.";
-    window.open(TG, "_blank", "noopener");
+  wireOrderForm(form, $("#formMsg"), () => {
+    const opt = select.selectedOptions[0];
+    const note = form.elements.namedItem("note").value.trim();
+    return {
+      product: select.value || "Maslahat kerak",
+      price: opt && opt.dataset.price ? opt.dataset.price : "",
+      note
+    };
   });
 
   // ---------- reveal on scroll ----------
-  const targets = $$(".section__head, .feature, .choose__card, .steps li, .faq details, .ccard, .form");
+  const targets = $$(".section__head, .feature, .choose__card, .steps li, .faq details, .ccard, .form, .card, .cat-tile, .trust__item, .cta__inner");
+  targets.forEach((t, i) => { if (t.matches(".card, .feature, .cat-tile, .trust__item")) t.style.transitionDelay = `${(i % 4) * 70}ms`; });
   if ("IntersectionObserver" in window) {
     targets.forEach(t => t.classList.add("reveal"));
     const io = new IntersectionObserver(entries => entries.forEach(en => {
       if (en.isIntersecting) { en.target.classList.add("is-in"); io.unobserve(en.target); }
     }), { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
     targets.forEach(t => io.observe(t));
+  }
+
+
+  // ---------- scroll progress ----------
+  const bar = $("#progress");
+  const onProgress = () => {
+    const h = document.documentElement;
+    const max = h.scrollHeight - h.clientHeight;
+    bar.style.transform = `scaleX(${max > 0 ? Math.min(h.scrollTop / max, 1) : 0})`;
+  };
+  window.addEventListener("scroll", onProgress, { passive: true });
+  onProgress();
+
+  // ---------- count-up numbers ----------
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (!reduce) {
+    $$("[data-countup]").forEach(el => {
+      const end = +el.dataset.countup;
+      const t0 = performance.now() + 500;
+      const step = now => {
+        const p = Math.min(Math.max((now - t0) / 1400, 0), 1);
+        el.textContent = Math.round(end * (1 - Math.pow(1 - p, 3)));
+        if (p < 1) requestAnimationFrame(step);
+      };
+      el.textContent = "0";
+      requestAnimationFrame(step);
+    });
+  }
+
+  // ---------- hero parallax ----------
+  const media = $(".hero__media");
+  if (media && !reduce && window.matchMedia("(hover: hover)").matches) {
+    window.addEventListener("mousemove", e => {
+      const x = (e.clientX / innerWidth - .5) * 14;
+      const y = (e.clientY / innerHeight - .5) * 10;
+      media.style.translate = `${x}px ${y}px`;
+    }, { passive: true });
   }
 
   $("#year").textContent = new Date().getFullYear();
