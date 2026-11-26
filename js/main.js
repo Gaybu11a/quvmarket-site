@@ -67,6 +67,33 @@
     }));
   });
 
+
+  // ---------- sale badges (old price -> % discount) ----------
+  cards.forEach(c => {
+    const old = $(".price__old", c);
+    if (!old || !c.dataset.price) return;
+    const was = +old.textContent.replace(/\D/g, "");
+    const pct = Math.round((1 - +c.dataset.price / was) * 100);
+    if (!was || pct < 1) return;
+    const tags = document.createElement("div");
+    tags.className = "card__tags";
+    tags.innerHTML = `<span class="badge badge--sale">-${pct}%</span>`;
+    $(".card__img", c).appendChild(tags);
+  });
+
+  // ---------- category tiles ----------
+  $$(".cat-tile").forEach(tile => {
+    const f = tile.dataset.filter;
+    const inCat = cards.filter(c => c.dataset.cat === f);
+    const min = Math.min(...inCat.map(c => +c.dataset.price).filter(Boolean));
+    $(`[data-count="${f}"]`, tile).textContent = inCat.length;
+    $(`[data-min="${f}"]`, tile).textContent = fmt(min).replace(/ so.m$/, " so'mdan");
+    tile.addEventListener("click", () => {
+      const tab = $(`.tab[data-filter="${f}"]`);
+      if (tab) tab.click();
+    });
+  });
+
   // ---------- product select in form ----------
   const select = $("#productSelect");
   cards.forEach(c => {
